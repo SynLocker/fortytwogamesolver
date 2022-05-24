@@ -12,10 +12,9 @@ defmodule Machine do
     :jump_f1
     :jump_f2
   """
-  def evaluate(game_map, stars, spaceship, program, pc \\ {0,0}) do
-    func = elem(pc, 0)
-    addr = elem(pc, 1)
-    instruction = Enum.at(program, func) |> Enum.at(addr)
+  def evaluate(game_map, stars, spaceship, program, pc \\ %ProgramCounter{}) do
+    instruction = Enum.at(program, pc.func) |> Enum.at(pc.addr)
+    current_color = Enum.at(game_map, spaceship.posY) |> Enum.at(spaceship.posX)
 
     {new_game_map, new_stars, new_spaceship, new_pc} = case instruction do
       :forward -> spaceship_forward(game_map, stars, spaceship, pc)
@@ -27,22 +26,32 @@ defmodule Machine do
       :jump_f0 -> jump(game_map, stars, spaceship, pc, 0)
       :jump_f1 -> jump(game_map, stars, spaceship, pc, 1)
       :jump_f2 -> jump(game_map, stars, spaceship, pc, 2)
+      {:forward, ^current_color} -> spaceship_forward(game_map, stars, spaceship, pc)
+      {:turn_left, ^current_color} -> spaceship_turn_left(game_map, stars, spaceship, pc)
+      {:turn_right, ^current_color} -> spaceship_turn_right(game_map, stars, spaceship, pc)
+      {:paint_red, ^current_color} -> paint(game_map, stars, spaceship, pc, :red)
+      {:paint_green, ^current_color} -> paint(game_map, stars, spaceship, pc, :green)
+      {:paint_blue, ^current_color} -> paint(game_map, stars, spaceship, pc, :blue)
+      {:jump_f0, ^current_color} -> jump(game_map, stars, spaceship, pc, 0)
+      {:jump_f1, ^current_color} -> jump(game_map, stars, spaceship, pc, 1)
+      {:jump_f2, ^current_color} -> jump(game_map, stars, spaceship, pc, 2)
+      _ ->  {game_map, stars, spaceship, pc}
     end
 
-    incr_pc = {elem(new_pc, 0), elem(new_pc, 1) + 1}
+    incr_pc = %{pc | addr: new_pc.addr + 1}
     check_game_status(new_game_map, new_stars, new_spaceship, program, incr_pc)
   end
 
-  def check_game_status(game_map, stars, spaceship, program, {func, addr}) do
+  def check_game_status(game_map, stars, spaceship, program, pc) do
     cond do
       length(stars) == 0 ->
           {:win, program}
       Enum.at(game_map, spaceship.posY) |> Enum.at(spaceship.posX) == nil ->
           {:lose, program}
-      Enum.at(program, func) |> length <= addr ->
+      Enum.at(program, pc.func) |> length <= pc.addr ->
           {:lose, program}
       true ->
-          evaluate(game_map, stars, spaceship, program, {func, addr})
+          evaluate(game_map, stars, spaceship, program, pc)
     end
   end
 
@@ -53,7 +62,7 @@ defmodule Machine do
       :right -> %{spaceship | posX: spaceship.posX + 1}
       :left -> %{spaceship | posX: spaceship.posX - 1}
     end
-    new_stars = Enum.filter(stars, fn {x, y} -> not(x == new_spaceship.posX and y == new_spaceship.posY) end)
+    new_stars = Enum.filter(stars, fn {y, x} -> not(x == new_spaceship.posX and y == new_spaceship.posY) end)
     {game_map, new_stars, new_spaceship, pc}
   end
 
@@ -82,7 +91,7 @@ defmodule Machine do
   end
 
   def jump(game_map, stars, spaceship, _, func) do
-    {game_map, stars, spaceship, {func, -1}}
+    {game_map, stars, spaceship, %ProgramCounter{func: func, addr: -1}}
   end
 
 
