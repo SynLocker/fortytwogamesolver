@@ -38,7 +38,7 @@ defmodule Machine do
       _ ->  {game_map, stars, spaceship, pc}
     end
 
-    incr_pc = %{pc | addr: new_pc.addr + 1}
+    incr_pc = %{new_pc | addr: new_pc.addr + 1}
     check_game_status(new_game_map, new_stars, new_spaceship, program, incr_pc)
   end
 
@@ -62,7 +62,7 @@ defmodule Machine do
       :right -> %{spaceship | posX: spaceship.posX + 1}
       :left -> %{spaceship | posX: spaceship.posX - 1}
     end
-    new_stars = Enum.filter(stars, fn {y, x} -> not(x == new_spaceship.posX and y == new_spaceship.posY) end)
+    new_stars = Enum.filter(stars, fn {x, y} -> not(x == new_spaceship.posX and y == new_spaceship.posY) end)
     {game_map, new_stars, new_spaceship, pc}
   end
 
@@ -93,6 +93,5 @@ defmodule Machine do
   def jump(game_map, stars, spaceship, _, func) do
     {game_map, stars, spaceship, %ProgramCounter{func: func, addr: -1}}
   end
-
 
 end
