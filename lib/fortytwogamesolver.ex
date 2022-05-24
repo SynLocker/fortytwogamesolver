@@ -14,9 +14,9 @@ defmodule Fortytwogamesolver do
   """
   def main(_) do
     game_map = [[:red, :red, :red], [:red, :red, :red], [:red, :red, :red]]
-    stars = [{2,0}]
+    stars = [{0,2}]
     spaceship = %Spaceship{posX: 2, posY: 2, direction: :left}
     program = [[:forward, :forward]]
-    IO.puts(Machine.evaluate(game_map, stars, spaceship, program))
+    IO.inspect(Machine.evaluate(game_map, stars, spaceship, program))
   end
 end
