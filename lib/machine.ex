@@ -17,15 +17,15 @@ defmodule Machine do
     current_color = Enum.at(game_map, spaceship.posY) |> Enum.at(spaceship.posX)
 
     {new_game_map, new_stars, new_spaceship, new_pc} = case instruction do
-      :forward -> spaceship_forward(game_map, stars, spaceship, pc)
-      :turn_left -> spaceship_turn_left(game_map, stars, spaceship, pc)
-      :turn_right -> spaceship_turn_right(game_map, stars, spaceship, pc)
-      :paint_red -> paint(game_map, stars, spaceship, pc, :red)
-      :paint_green -> paint(game_map, stars, spaceship, pc, :green)
-      :paint_blue -> paint(game_map, stars, spaceship, pc, :blue)
-      :jump_f0 -> jump(game_map, stars, spaceship, pc, 0)
-      :jump_f1 -> jump(game_map, stars, spaceship, pc, 1)
-      :jump_f2 -> jump(game_map, stars, spaceship, pc, 2)
+      {:forward, :grey} -> spaceship_forward(game_map, stars, spaceship, pc)
+      {:turn_left, :grey} -> spaceship_turn_left(game_map, stars, spaceship, pc)
+      {:turn_right, :grey} -> spaceship_turn_right(game_map, stars, spaceship, pc)
+      {:paint_red, :grey} -> paint(game_map, stars, spaceship, pc, :red)
+      {:paint_green, :grey} -> paint(game_map, stars, spaceship, pc, :green)
+      {:paint_blue, :grey} -> paint(game_map, stars, spaceship, pc, :blue)
+      {:jump_f0, :grey} -> jump(game_map, stars, spaceship, pc, 0)
+      {:jump_f1, :grey} -> jump(game_map, stars, spaceship, pc, 1)
+      {:jump_f2, :grey} -> jump(game_map, stars, spaceship, pc, 2)
       {:forward, ^current_color} -> spaceship_forward(game_map, stars, spaceship, pc)
       {:turn_left, ^current_color} -> spaceship_turn_left(game_map, stars, spaceship, pc)
       {:turn_right, ^current_color} -> spaceship_turn_right(game_map, stars, spaceship, pc)
@@ -43,9 +43,13 @@ defmodule Machine do
   end
 
   def check_game_status(game_map, stars, spaceship, program, pc) do
+    IO.inspect(stars)
+    IO.inspect(spaceship)
     cond do
       length(stars) == 0 ->
           {:win, program}
+      Enum.at(game_map, spaceship.posY) == nil ->
+          {:lose, program}
       Enum.at(game_map, spaceship.posY) |> Enum.at(spaceship.posX) == nil ->
           {:lose, program}
       Enum.at(program, pc.func) |> length <= pc.addr ->

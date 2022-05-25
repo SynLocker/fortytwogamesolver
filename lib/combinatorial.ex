@@ -1,4 +1,4 @@
-defmodule CombinatorialUtility do
+defmodule Combinatorial do
   def perm_rep(list), do: perm_rep(list, length(list))
 
   def perm_rep([], _), do: [[]]
