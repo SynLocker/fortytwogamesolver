@@ -43,14 +43,14 @@ defmodule Machine do
   end
 
   def check_game_status(game_map, stars, spaceship, program, pc) do
-    IO.inspect(stars)
-    IO.inspect(spaceship)
     cond do
       length(stars) == 0 ->
           {:win, program}
       Enum.at(game_map, spaceship.posY) == nil ->
           {:lose, program}
       Enum.at(game_map, spaceship.posY) |> Enum.at(spaceship.posX) == nil ->
+          {:lose, program}
+      Enum.at(game_map, spaceship.posY) |> Enum.at(spaceship.posX) == :grey ->
           {:lose, program}
       Enum.at(program, pc.func) |> length <= pc.addr ->
           {:lose, program}
