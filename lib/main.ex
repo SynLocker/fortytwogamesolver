@@ -13,7 +13,7 @@ defmodule Main do
   def n_programs do
     for l <- fun_len do (length(cmds) |> :math.pow(l)) * :math.pow(4, l) end
     |> List.foldl(1, fn el, acc -> el*acc end)
-    |> Integer.parse
+    |> trunc
   end
 
   def main() do
@@ -35,7 +35,7 @@ defmodule Main do
     receive do
       {:win, program} ->
           IO.inspect(program)
-          exit(:over)
+          raise "Over!"
       {:lose, _} ->
         supervisor(active_processes - 1, solution_checked + 1, :false)
       {:new} ->
