@@ -17,7 +17,7 @@ defmodule Main do
 
 
   def find_solution(game_map, cmds, fun_len, stars, spaceship) when length(fun_len) == 1 do
-    {:ok, file} = File.open "data.log", [:append, {:delayed_write, 100, 20}]
+    {:ok, file} = File.open "solutions.log", [:append, {:delayed_write, 100, 20}]
 
     seed = gen_seed(cmds, fun_len)
     {colors, instr} = Enum.at(seed, 0)

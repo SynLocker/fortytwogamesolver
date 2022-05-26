@@ -1,21 +1,17 @@
 # Fortytwogamesolver
+## How to run
 
-**TODO: Add description**
-
-## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
+If [Elixir](https://elixir-lang.org/), the package can be installed
 by adding `fortytwogamesolver` to your list of dependencies in `mix.exs`:
 
-```elixir
-def deps do
-  [
-    {:fortytwogamesolver, "~> 0.1.0"}
-  ]
+```
+mix compile
+iex -S mix
 end
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/fortytwogamesolver>.
+and in the shell just type:
 
+```elixir
+Main.main
+```

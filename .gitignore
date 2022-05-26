@@ -24,3 +24,5 @@ fortytwogamesolver-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+solutions.log
+out.log
