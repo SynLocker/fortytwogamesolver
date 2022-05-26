@@ -45,15 +45,15 @@ defmodule Machine do
   def check_game_status(game_map, stars, spaceship, program, pc) do
     cond do
       length(stars) == 0 ->
-          {:win, program}
+          send(Process.whereis(:main_sup), {:win, program})
       Enum.at(game_map, spaceship.posY) == nil ->
-          {:lose, program}
+          send(Process.whereis(:main_sup), {:lose, program})
       Enum.at(game_map, spaceship.posY) |> Enum.at(spaceship.posX) == nil ->
-          {:lose, program}
+          send(Process.whereis(:main_sup), {:lose, program})
       Enum.at(game_map, spaceship.posY) |> Enum.at(spaceship.posX) == :grey ->
-          {:lose, program}
+          send(Process.whereis(:main_sup), {:lose, program})
       Enum.at(program, pc.func) |> length <= pc.addr ->
-          {:lose, program}
+          send(Process.whereis(:main_sup), {:lose, program})
       true ->
           evaluate(game_map, stars, spaceship, program, pc)
     end
