@@ -14,7 +14,8 @@ defmodule Machine do
   """
   def evaluate(game_map, stars, spaceship, program, pc \\ %ProgramCounter{}) do
     pid = self()
-    spawn_link(fn -> :timer.sleep(30000); send(pid, {:die}) end)
+    spawn_link(fn -> :timer.sleep(3000); send(pid, {:die}) end)
+
     do_evaluate(game_map, stars, spaceship, program, pc)
   end
 

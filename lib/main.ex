@@ -1,14 +1,23 @@
 defmodule Main do
 
+  def max_process, do: 200000
 
-  def game_map, do: [[:blue, :red, :red],
-                    [:red, :red, :red],
-                    [:blue, :red, :red]] |> Enum.reverse
+  def game_map, do: [
+    [:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey],
+    [:grey,:grey,:red,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey],
+    [:grey,:grey,:red,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey],
+    [:grey,:grey,:red,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey],
+    [:grey,:grey,:red,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey],
+    [:grey,:grey,:blue,:red,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey],
+    [:grey,:grey,:grey,:red,:red,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey],
+    [:grey,:grey,:grey,:grey,:red,:red,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey],
+    [:grey,:grey,:grey,:grey,:grey,:red,:red,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey,:grey]
+  ] |> Enum.reverse
 
-  def stars, do: [{2,0}]
-  def spaceship, do: %Spaceship{posX: 2, posY: 2, direction: :left}
-  def cmds, do: [:turn_right, :turn_left, :forward]
-  def fun_len, do: [3, 2]
+  def stars, do: [{6,0}]
+  def spaceship, do: %Spaceship{posX: 2, posY: 7, direction: :down}
+  def cmds, do: [:turn_right, :turn_left, :forward, :jump_f0]
+  def fun_len, do: [6]
 
   def n_programs do
     for l <- fun_len do (length(cmds) |> :math.pow(l)) * :math.pow(4, l) end
@@ -17,7 +26,7 @@ defmodule Main do
   end
 
   def start() do
-    spawn_link(fn -> supervisor end)
+    spawn(fn -> supervisor end)
   end
 
   def status do
@@ -41,7 +50,7 @@ defmodule Main do
     receive do
       {:win, program} ->
           IO.inspect(program)
-      {:lose, _} ->
+      {:lose, _program} ->
         supervisor(active_processes - 1, solution_checked + 1, :false)
       {:new} ->
         supervisor(active_processes + 1, solution_checked, :false)
@@ -98,5 +107,11 @@ defmodule Main do
     colors = [:red, :blue, :green, :grey]
     (for fs <- fun_len , do: Combinatorial.perm_rep(colors, fs))
       |> Enum.zip(for fs <- fun_len , do: Combinatorial.perm_rep(cmds, fs))
+  end
+
+  def safe_spawn(func) do
+    np = Process.list |> length
+    spawn_link(fn -> func.() end)
+
   end
 end
