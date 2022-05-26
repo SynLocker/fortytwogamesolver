@@ -7,7 +7,6 @@ by adding `fortytwogamesolver` to your list of dependencies in `mix.exs`:
 ```
 mix compile
 iex -S mix
-end
 ```
 
 and in the shell just type:
