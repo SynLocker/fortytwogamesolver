@@ -7,7 +7,7 @@ defmodule Main do
 
   def stars, do: [{2,0}]
   def spaceship, do: %Spaceship{posX: 2, posY: 2, direction: :left}
-  def cmds, do: [:forward, :turn_left, :jump_f0]
+  def cmds, do: [:turn_right, :turn_left, :forward]
   def fun_len, do: [3, 2]
 
   def n_programs do
@@ -16,12 +16,18 @@ defmodule Main do
     |> trunc
   end
 
-  def main() do
+  def start() do
     spawn_link(fn -> supervisor end)
   end
 
   def status do
     send(Process.whereis(:main_sup), {:status})
+  end
+
+  def status_loop do
+    :timer.sleep(5000)
+    status()
+    status_loop()
   end
   def supervisor(active_processes \\ 0, solution_checked \\ 0, spawn \\ :true)
 
@@ -35,7 +41,6 @@ defmodule Main do
     receive do
       {:win, program} ->
           IO.inspect(program)
-          raise "Over!"
       {:lose, _} ->
         supervisor(active_processes - 1, solution_checked + 1, :false)
       {:new} ->
@@ -52,6 +57,7 @@ defmodule Main do
     {colors, instr} = Enum.at(seed, 0)
 
     for i <- instr, c <- colors do
+      send(Process.whereis(:main_sup), {:new})
       spawn_link(fn ->
         Machine.evaluate(game_map, stars, spaceship, [Enum.zip(i,c)])
       end)
@@ -65,6 +71,7 @@ defmodule Main do
     {colors_1, instr_1} = Enum.at(seed, 1)
 
     for i_0 <- instr_0, c_0 <- colors_0, i_1 <- instr_1, c_1 <- colors_1 do
+      send(Process.whereis(:main_sup), {:new})
       spawn_link(fn ->
         Machine.evaluate(game_map, stars, spaceship, [Enum.zip(i_0,c_0), Enum.zip(i_1,c_1)])
       end)
@@ -79,6 +86,7 @@ defmodule Main do
     {colors_2, instr_2} = Enum.at(seed, 2)
 
     for i_0 <- instr_0, c_0 <- colors_0, i_1 <- instr_1, c_1 <- colors_1,  i_2 <- instr_2, c_2 <- colors_2 do
+      send(Process.whereis(:main_sup), {:new})
       spawn_link(fn ->
         Machine.evaluate(game_map, stars, spaceship, [Enum.zip(i_0,c_0), Enum.zip(i_1,c_1), Enum.zip(i_2,c_2)])
       end)

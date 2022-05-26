@@ -13,6 +13,12 @@ defmodule Machine do
     :jump_f2
   """
   def evaluate(game_map, stars, spaceship, program, pc \\ %ProgramCounter{}) do
+    pid = self()
+    spawn_link(fn -> :timer.sleep(30000); send(pid, {:die}) end)
+    do_evaluate(game_map, stars, spaceship, program, pc)
+  end
+
+  def do_evaluate(game_map, stars, spaceship, program, pc) do
     instruction = Enum.at(program, pc.func) |> Enum.at(pc.addr)
     current_color = Enum.at(game_map, spaceship.posY) |> Enum.at(spaceship.posX)
 
@@ -43,6 +49,14 @@ defmodule Machine do
   end
 
   def check_game_status(game_map, stars, spaceship, program, pc) do
+    receive do
+      {:die} ->
+        send(Process.whereis(:main_sup), {:loop, program})
+        exit(:normal)
+    after
+       0 -> :ok
+    end
+
     cond do
       length(stars) == 0 ->
           send(Process.whereis(:main_sup), {:win, program})
@@ -55,7 +69,7 @@ defmodule Machine do
       Enum.at(program, pc.func) |> length <= pc.addr ->
           send(Process.whereis(:main_sup), {:lose, program})
       true ->
-          evaluate(game_map, stars, spaceship, program, pc)
+        do_evaluate(game_map, stars, spaceship, program, pc)
     end
   end
 
@@ -99,3 +113,5 @@ defmodule Machine do
   end
 
 end
+#Machine.evaluate(Main.game_map, Main.stars, Main.spaceship, [program|])
+#program = [[{:jump_f0, :grey}]|[]]

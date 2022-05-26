@@ -9,7 +9,7 @@ iex -S mix
 and in the shell just type:
 
 ```elixir
-Main.main
+Main.start
 ```
 
 You can check the status of the computation by typing: 
