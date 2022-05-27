@@ -1,6 +1,6 @@
 defmodule Scheduler do
 
-  @max_process 20000
+  @max_process 200
 
   def start do
     Task.start_link(fn -> init() end)
@@ -54,6 +54,10 @@ defmodule Scheduler do
           IO.inspect(game)
           IO.puts("IM STUCK :(")
     end
+  end
+
+  def status do
+    send(Process.whereis(:scheduler), {:status})
   end
 end
 
