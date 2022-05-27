@@ -14,11 +14,11 @@ defmodule Machine do
     :jump_f2
   """
   def evaluate(game_map, stars, spaceship, program, pc \\ %ProgramCounter{}) do
-    Task.start(__MODULE__, :observer, [self()])
-    do_evaluate(game_map, stars, spaceship, program, pc)
+    {:ok, obs_pid} = Task.start(__MODULE__, :observer, [self()])
+    do_evaluate(game_map, stars, spaceship, program, pc, obs_pid)
   end
 
-  def do_evaluate(game_map, stars, spaceship, program, pc) do
+  def do_evaluate(game_map, stars, spaceship, program, pc, obs_pid) do
     instruction = Enum.at(program, pc.func) |> Enum.at(pc.addr)
     current_color = Enum.at(game_map, spaceship.posY) |> Enum.at(spaceship.posX)
 
@@ -36,10 +36,10 @@ defmodule Machine do
     end
 
     incr_pc = %{new_pc | addr: new_pc.addr + 1}
-    check_game_status(new_game_map, new_stars, new_spaceship, program, incr_pc)
+    check_game_status(new_game_map, new_stars, new_spaceship, program, incr_pc, obs_pid)
   end
 
-  def check_game_status(game_map, stars, spaceship, program, pc) do
+  def check_game_status(game_map, stars, spaceship, program, pc, obs_pid) do
     receive do
       {:die, pid} ->
         Process.exit(pid, :normal)
@@ -48,17 +48,22 @@ defmodule Machine do
        0 ->
         cond do
           length(stars) == 0 ->
-              {:win, program}
+            send(obs_pid, {:die})
+            {:win, program}
           Enum.at(game_map, spaceship.posY) == nil ->
-              {:lose}
+            send(obs_pid, {:die})
+            {:lose}
           Enum.at(game_map, spaceship.posY) |> Enum.at(spaceship.posX) == nil ->
-              {:lose}
+            send(obs_pid, {:die})
+            {:lose}
           Enum.at(game_map, spaceship.posY) |> Enum.at(spaceship.posX) == :grey ->
-              {:lose}
+            send(obs_pid, {:die})
+            {:lose}
           Enum.at(program, pc.func) |> length <= pc.addr ->
-              {:lose}
+            send(obs_pid, {:die})
+            {:lose}
           true ->
-            do_evaluate(game_map, stars, spaceship, program, pc)
+            do_evaluate(game_map, stars, spaceship, program, pc, obs_pid)
         end
     end
   end
@@ -103,9 +108,14 @@ defmodule Machine do
   end
 
   def observer(pid) do
-    :timer.sleep(@available_time)
-    send(pid, {:die, self()})
-    exit(:normal)
+    receive do
+      {:die} ->
+        exit(:normal)
+      after
+        @available_time ->
+          send(pid, {:die})
+    end
+
   end
 end
 #Machine.evaluate(Main.game_map, Main.stars, Main.spaceship, [program|])
