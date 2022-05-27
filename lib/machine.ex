@@ -41,9 +41,8 @@ defmodule Machine do
 
   def check_game_status(game_map, stars, spaceship, program, pc, obs_pid) do
     receive do
-      {:die, pid} ->
-        Process.exit(pid, :normal)
-        {:lose, program}
+      {:die} ->
+        {:lose}
     after
        0 ->
         cond do

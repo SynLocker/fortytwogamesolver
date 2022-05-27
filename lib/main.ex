@@ -50,7 +50,8 @@ defmodule Main do
   def supervisor(active_processes, solution_checked, :false) do
     receive do
       {:win, program} ->
-          IO.inspect(program)
+        IO.inspect(program)
+        supervisor(active_processes - 1, solution_checked + 1, :false)
       {:lose} ->
         supervisor(active_processes - 1, solution_checked + 1, :false)
       {:new} ->

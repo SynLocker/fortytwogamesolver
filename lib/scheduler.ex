@@ -1,6 +1,6 @@
 defmodule Scheduler do
 
-  @max_process 50
+  @max_process 20000
 
   def start do
     Task.start_link(fn -> init() end)
@@ -37,6 +37,10 @@ defmodule Scheduler do
         send(pid, {:run, game})
         send(sender, {:runned})
         loop(pids, new_queue)
+      {:status} ->
+        IO.inspect(pids)
+        IO.inspect(queue)
+        loop(pids, queue)
     end
   end
 
@@ -45,6 +49,10 @@ defmodule Scheduler do
     receive do
       {:runned} ->
         :ok
+      after
+        10000 ->
+          IO.inspect(game)
+          IO.puts("IM STUCK :(")
     end
   end
 end
