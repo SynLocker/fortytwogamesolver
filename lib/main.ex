@@ -26,6 +26,7 @@ defmodule Main do
   end
 
   def start() do
+    Scheduler.start
     spawn(fn -> supervisor end)
   end
 
@@ -50,7 +51,7 @@ defmodule Main do
     receive do
       {:win, program} ->
           IO.inspect(program)
-      {:lose, _program} ->
+      {:lose} ->
         supervisor(active_processes - 1, solution_checked + 1, :false)
       {:new} ->
         supervisor(active_processes + 1, solution_checked, :false)
@@ -66,10 +67,7 @@ defmodule Main do
     {colors, instr} = Enum.at(seed, 0)
 
     for i <- instr, c <- colors do
-      send(Process.whereis(:main_sup), {:new})
-      spawn_link(fn ->
-        Machine.evaluate(game_map, stars, spaceship, [Enum.zip(i,c)])
-      end)
+        Scheduler.execute_program({game_map, stars, spaceship, [Enum.zip(i,c)]})
     end
     :ok
   end
@@ -80,10 +78,7 @@ defmodule Main do
     {colors_1, instr_1} = Enum.at(seed, 1)
 
     for i_0 <- instr_0, c_0 <- colors_0, i_1 <- instr_1, c_1 <- colors_1 do
-      send(Process.whereis(:main_sup), {:new})
-      spawn_link(fn ->
-        Machine.evaluate(game_map, stars, spaceship, [Enum.zip(i_0,c_0), Enum.zip(i_1,c_1)])
-      end)
+      Scheduler.execute_program({game_map, stars, spaceship, [Enum.zip(i_0,c_0), Enum.zip(i_1,c_1)]})
     end
     :ok
   end
@@ -95,10 +90,7 @@ defmodule Main do
     {colors_2, instr_2} = Enum.at(seed, 2)
 
     for i_0 <- instr_0, c_0 <- colors_0, i_1 <- instr_1, c_1 <- colors_1,  i_2 <- instr_2, c_2 <- colors_2 do
-      send(Process.whereis(:main_sup), {:new})
-      spawn_link(fn ->
-        Machine.evaluate(game_map, stars, spaceship, [Enum.zip(i_0,c_0), Enum.zip(i_1,c_1), Enum.zip(i_2,c_2)])
-      end)
+      Scheduler.execute_program({game_map, stars, spaceship, [Enum.zip(i_0,c_0), Enum.zip(i_1,c_1), Enum.zip(i_2,c_2)]})
     end
     :ok
   end
@@ -107,11 +99,5 @@ defmodule Main do
     colors = [:red, :blue, :green, :grey]
     (for fs <- fun_len , do: Combinatorial.perm_rep(colors, fs))
       |> Enum.zip(for fs <- fun_len , do: Combinatorial.perm_rep(cmds, fs))
-  end
-
-  def safe_spawn(func) do
-    np = Process.list |> length
-    spawn_link(fn -> func.() end)
-
   end
 end

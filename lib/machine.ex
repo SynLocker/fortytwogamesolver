@@ -1,5 +1,6 @@
 defmodule Machine do
 
+  @available_time 3000
   @moduledoc """
     ISTRUZIONI
     :forward
@@ -13,9 +14,7 @@ defmodule Machine do
     :jump_f2
   """
   def evaluate(game_map, stars, spaceship, program, pc \\ %ProgramCounter{}) do
-    pid = self()
-    spawn_link(fn -> :timer.sleep(3000); send(pid, {:die}) end)
-
+    Task.start(__MODULE__, :observer, [self()])
     do_evaluate(game_map, stars, spaceship, program, pc)
   end
 
@@ -24,24 +23,15 @@ defmodule Machine do
     current_color = Enum.at(game_map, spaceship.posY) |> Enum.at(spaceship.posX)
 
     {new_game_map, new_stars, new_spaceship, new_pc} = case instruction do
-      {:forward, :grey} -> spaceship_forward(game_map, stars, spaceship, pc)
-      {:turn_left, :grey} -> spaceship_turn_left(game_map, stars, spaceship, pc)
-      {:turn_right, :grey} -> spaceship_turn_right(game_map, stars, spaceship, pc)
-      {:paint_red, :grey} -> paint(game_map, stars, spaceship, pc, :red)
-      {:paint_green, :grey} -> paint(game_map, stars, spaceship, pc, :green)
-      {:paint_blue, :grey} -> paint(game_map, stars, spaceship, pc, :blue)
-      {:jump_f0, :grey} -> jump(game_map, stars, spaceship, pc, 0)
-      {:jump_f1, :grey} -> jump(game_map, stars, spaceship, pc, 1)
-      {:jump_f2, :grey} -> jump(game_map, stars, spaceship, pc, 2)
-      {:forward, ^current_color} -> spaceship_forward(game_map, stars, spaceship, pc)
-      {:turn_left, ^current_color} -> spaceship_turn_left(game_map, stars, spaceship, pc)
-      {:turn_right, ^current_color} -> spaceship_turn_right(game_map, stars, spaceship, pc)
-      {:paint_red, ^current_color} -> paint(game_map, stars, spaceship, pc, :red)
-      {:paint_green, ^current_color} -> paint(game_map, stars, spaceship, pc, :green)
-      {:paint_blue, ^current_color} -> paint(game_map, stars, spaceship, pc, :blue)
-      {:jump_f0, ^current_color} -> jump(game_map, stars, spaceship, pc, 0)
-      {:jump_f1, ^current_color} -> jump(game_map, stars, spaceship, pc, 1)
-      {:jump_f2, ^current_color} -> jump(game_map, stars, spaceship, pc, 2)
+      {:forward, color} when color in [:grey, current_color] -> spaceship_forward(game_map, stars, spaceship, pc)
+      {:turn_left, color} when color in [:grey, current_color] -> spaceship_turn_left(game_map, stars, spaceship, pc)
+      {:turn_right, color} when color in [:grey, current_color] -> spaceship_turn_right(game_map, stars, spaceship, pc)
+      {:paint_red, color} when color in [:grey, current_color] -> paint(game_map, stars, spaceship, pc, :red)
+      {:paint_green, color} when color in [:grey, current_color] -> paint(game_map, stars, spaceship, pc, :green)
+      {:paint_blue, color} when color in [:grey, current_color] -> paint(game_map, stars, spaceship, pc, :blue)
+      {:jump_f0, color} when color in [:grey, current_color] -> jump(game_map, stars, spaceship, pc, 0)
+      {:jump_f1, color} when color in [:grey, current_color] -> jump(game_map, stars, spaceship, pc, 1)
+      {:jump_f2, color} when color in [:grey, current_color] -> jump(game_map, stars, spaceship, pc, 2)
       _ ->  {game_map, stars, spaceship, pc}
     end
 
@@ -51,26 +41,25 @@ defmodule Machine do
 
   def check_game_status(game_map, stars, spaceship, program, pc) do
     receive do
-      {:die} ->
-        send(Process.whereis(:main_sup), {:loop, program})
-        exit(:normal)
+      {:die, pid} ->
+        Process.exit(pid, :normal)
+        {:lose, program}
     after
-       0 -> :ok
-    end
-
-    cond do
-      length(stars) == 0 ->
-          send(Process.whereis(:main_sup), {:win, program})
-      Enum.at(game_map, spaceship.posY) == nil ->
-          send(Process.whereis(:main_sup), {:lose, program})
-      Enum.at(game_map, spaceship.posY) |> Enum.at(spaceship.posX) == nil ->
-          send(Process.whereis(:main_sup), {:lose, program})
-      Enum.at(game_map, spaceship.posY) |> Enum.at(spaceship.posX) == :grey ->
-          send(Process.whereis(:main_sup), {:lose, program})
-      Enum.at(program, pc.func) |> length <= pc.addr ->
-          send(Process.whereis(:main_sup), {:lose, program})
-      true ->
-        do_evaluate(game_map, stars, spaceship, program, pc)
+       0 ->
+        cond do
+          length(stars) == 0 ->
+              {:win, program}
+          Enum.at(game_map, spaceship.posY) == nil ->
+              {:lose}
+          Enum.at(game_map, spaceship.posY) |> Enum.at(spaceship.posX) == nil ->
+              {:lose}
+          Enum.at(game_map, spaceship.posY) |> Enum.at(spaceship.posX) == :grey ->
+              {:lose}
+          Enum.at(program, pc.func) |> length <= pc.addr ->
+              {:lose}
+          true ->
+            do_evaluate(game_map, stars, spaceship, program, pc)
+        end
     end
   end
 
@@ -113,6 +102,11 @@ defmodule Machine do
     {game_map, stars, spaceship, %ProgramCounter{func: func, addr: -1}}
   end
 
+  def observer(pid) do
+    :timer.sleep(@available_time)
+    send(pid, {:die, self()})
+    exit(:normal)
+  end
 end
 #Machine.evaluate(Main.game_map, Main.stars, Main.spaceship, [program|])
 #program = [[{:jump_f0, :grey}]|[]]
